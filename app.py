@@ -1,8 +1,11 @@
-from flask import Flask, request, render_template
+import os
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
+from flask import Flask, request, render_template, jsonify
 import tensorflow as tf
 import numpy as np
 import os
 from PIL import Image
+from tensorflow.keras.preprocessing import image
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -12,7 +15,8 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 CLASS_NAMES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 # 2. Load your best-trained model globally
-MODEL_PATH = 'cifar10_best_deployed_model.keras'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, 'cifar10_best_deployed_model.keras')
 if os.path.exists(MODEL_PATH):
     model = tf.keras.models.load_model(MODEL_PATH)
     print(f" Successfully loaded {MODEL_PATH}")
@@ -124,9 +128,4 @@ def validation_stats():
     })
 
 if __name__ == '__main__':
-    import os
-    os.environ["TF_USE_LEGACY_KERAS"] = "1"
-    
-    # Your other imports continue down here...
-    from flask import Flask, request, render_template
-    import tensorflow as tf
+    app.run(debug=True)
