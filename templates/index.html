@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="CIFAR-10 AI image classification dashboard">
+    <meta name="theme-color" content="#2563eb">
+    <title>CIFAR-10 Image Classifier | AI Vision</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="hero">
+            <p class="hero-kicker">Computer Vision Dashboard</p>
+            <h1>CIFAR-10 Vision Console</h1>
+            <p class="hero-copy">
+                Upload any image and let the model classify it into one of 10 CIFAR-10 categories with a confidence score.
+            </p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-label">Model Classes</span>
+                    <strong>10 objects</strong>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Validation</span>
+                    <strong>50 checks</strong>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Status</span>
+                    <strong>Ready</strong>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <section class="card inference-section">
+                <div class="section-head">
+                    <p class="section-kicker">Live Inference</p>
+                    <h2>Upload and classify</h2>
+                </div>
+                <p class="section-copy">
+                    Select an image and the trained neural network will predict its CIFAR-10 label and confidence score.
+                </p>
+
+                <form id="uploadForm">
+                    <label class="dropzone" for="fileInput">
+                        <input type="file" id="fileInput" accept="image/*" required>
+                        <span id="fileLabel">Choose or drop an image</span>
+                        <span class="dropzone-note">PNG, JPG, or JPEG files supported</span>
+                    </label>
+                    <button type="submit" class="btn">Run Classification</button>
+                </form>
+
+                <div id="resultContainer" class="hidden">
+                    <div class="result-head">
+                        <h3>Prediction Result</h3>
+                        <span class="result-tag">Latest</span>
+                    </div>
+                    <img id="previewImage" src="" alt="Uploaded preview" loading="lazy">
+                    <div class="metrics">
+                        <p>
+                            <strong>Predicted Class</strong>
+                            <span id="resClass" class="badge">-</span>
+                        </p>
+                        <p>
+                            <strong>Confidence</strong>
+                            <span id="resConf">0.00%</span>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card validation-section">
+                <div class="section-head">
+                    <p class="section-kicker">Validation Matrix</p>
+                    <h2>Model performance</h2>
+                </div>
+                <p class="section-copy">
+                    Accuracy across the current test set: <strong id="valAccuracy">Loading...</strong>
+                </p>
+
+                <div class="table-responsive">
+                    <table id="matrixTable" role="grid" aria-label="Confusion matrix"></table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const fileLabel = document.getElementById('fileLabel');
+        const resultContainer = document.getElementById('resultContainer');
+        const previewImage = document.getElementById('previewImage');
+        const resClass = document.getElementById('resClass');
+        const resConf = document.getElementById('resConf');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileLabel.textContent = fileInput.files[0].name;
+            } else {
+                fileLabel.textContent = 'Choose or drop an image';
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (fileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            resClass.textContent = 'Analyzing...';
+            resConf.textContent = '--';
+            resultContainer.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/predict', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(`Error: ${data.error}`);
+                } else {
+                    previewImage.src = data.image_url;
+                    resClass.textContent = data.class.toUpperCase();
+                    resConf.textContent = data.confidence;
+                }
+            } catch (err) {
+                console.error('Inference Error:', err);
+                alert('Failed to process image. Please try again.');
+            }
+        });
+
+        async function loadValidationStats() {
+            try {
+                const response = await fetch('/validation-stats');
+                const data = await response.json();
+
+                document.getElementById('valAccuracy').textContent = data.accuracy;
+                const table = document.getElementById('matrixTable');
+
+                let tableHTML = '<tr><th>True / Predicted</th>';
+                data.classes.forEach((cls) => {
+                    tableHTML += `<th>${cls.substring(0, 5)}</th>`;
+                });
+                tableHTML += '</tr>';
+
+                data.matrix.forEach((row, rIdx) => {
+                    tableHTML += `<tr><td class="row-label"><strong>${data.classes[rIdx].substring(0, 4)}</strong></td>`;
+                    row.forEach((cell, cIdx) => {
+                        const isDiagonal = rIdx === cIdx;
+                        tableHTML += `<td class="${isDiagonal ? 'diagonal' : 'empty'}" title="True: ${data.classes[rIdx]}, Pred: ${data.classes[cIdx]}">${cell}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                });
+
+                table.innerHTML = tableHTML;
+            } catch (err) {
+                console.error('Validation mapping error:', err);
+                document.getElementById('valAccuracy').textContent = 'Error';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadValidationStats);
+    </script>
+</body>
+</html>
