@@ -125,6 +125,7 @@ def validation_stats():
     })
 
 if __name__ == '__main__':
-    # Hugging Face sets a 'PORT' environment variable automatically, default to 7860
-    port = int(os.environ.get('PORT', 7860))
+import os
+    # Dynamically read the port assigned by Render, defaulting to 10000
+    port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
