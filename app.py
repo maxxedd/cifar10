@@ -1,29 +1,31 @@
 import os
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
+
 from flask import Flask, request, render_template, jsonify
 import tensorflow as tf
-import numpy as np
-import os
-from PIL import Image
 from tensorflow.keras.preprocessing import image
+import numpy as np
+from PIL import Image
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# 1. Define CIFAR-10 classes
-CLASS_NAMES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+CLASS_NAMES = [
+    'airplane','automobile','bird','cat','deer',
+    'dog','frog','horse','ship','truck'
+]
 
-# 2. Load your best-trained model globally
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, 'cifar10_best_deployed_model.keras')
+
 if os.path.exists(MODEL_PATH):
     model = tf.keras.models.load_model(MODEL_PATH)
-    print(f" Successfully loaded {MODEL_PATH}")
+    print(f"Loaded {MODEL_PATH}")
 else:
     model = None
-    print(f"⚠️ Warning: {MODEL_PATH} not found. Please place it in the root folder.")
-
+    print(f"Warning: {MODEL_PATH} not found")
+    
 # Helper function to preprocess images to match CIFAR-10 shape
 def preprocess_image(img_path):
     img = image.load_img(img_path)
