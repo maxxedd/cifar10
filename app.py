@@ -14,7 +14,7 @@ CLASS_NAMES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', '
 # 2. Load your best-trained model globally
 MODEL_PATH = 'cifar10_best_deployed_model.keras'
 if os.path.exists(MODEL_PATH):
-    mmodel = tf.keras.models.load_model(MODEL_PATH)
+    model = tf.keras.models.load_model(MODEL_PATH)
     print(f" Successfully loaded {MODEL_PATH}")
 else:
     model = None
