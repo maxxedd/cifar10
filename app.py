@@ -126,9 +126,8 @@ def validation_stats():
 
 if __name__ == '__main__':
     import os
-    # Force TensorFlow to use the legacy Keras 2 backend instead of Keras 3
     os.environ["TF_USE_LEGACY_KERAS"] = "1"
     
-    # The rest of your original imports continue down here...
+    # Your other imports continue down here...
     from flask import Flask, request, render_template
     import tensorflow as tf
