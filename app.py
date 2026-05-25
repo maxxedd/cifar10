@@ -1,9 +1,8 @@
-import os
-import numpy as np
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, render_template
 import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
+import numpy as np
+import os
+from PIL import Image
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
